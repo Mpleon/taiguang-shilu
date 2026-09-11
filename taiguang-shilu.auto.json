@@ -1,0 +1,17 @@
+{
+  "type": "script",
+  "enabled": true,
+  "name": "胎光食录（自动更新）",
+  "id": "4a192c73-0671-43ae-a00e-d6307ca85e17",
+  "content": "import 'https://cdn.jsdelivr.net/gh/Mpleon/taiguang-shilu@latest/index.js';",
+  "info": "从 Mpleon/taiguang-shilu 的最新语义版本标签加载。刷新酒馆后加载更新，CDN 缓存可能延迟。需要配套的胎光食录聊天变量。",
+  "button": {
+    "enabled": true,
+    "buttons": []
+  },
+  "data": {},
+  "export_with": {
+    "data": true,
+    "button": true
+  }
+}
