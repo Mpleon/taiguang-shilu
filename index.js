@@ -4,7 +4,7 @@
 
   // 配置契约
 
-  const VERSION = '2.1.1';
+  const VERSION = '2.1.2';
 
   const LOG_TAG = `[胎光食录·TGL v${VERSION}]`;
 
@@ -3641,143 +3641,86 @@
     }
 
     function bindDrag() {
-
-      function position() {
-
-        try {
-
-          const value = JSON.parse(localStorage.getItem(KEYS.BTN_POS) || 'null');
-
-          if (isObj(value)) return {right:Number.parseFloat(value.right),bottom:Number.parseFloat(value.bottom)};
-
-        } catch (e) {}
-
-        return {right:20,bottom:72};
-
-      }
-
-      function place(right,bottom) {
-
-        const width = targetDoc.documentElement.clientWidth;
-
-        const height = targetDoc.documentElement.clientHeight;
-
-        if (width <= 0 || height <= 0) return; // 视口尺寸未就绪时不移动，避免误夹到0
-
-        const buttonWidth = $btn.outerWidth() || 52;   // 读真实外尺寸（含1px边框=54），不写死52
-
-        const buttonHeight = $btn.outerHeight() || 52;
-
-        $btn.css({
-
-          right:clamp(Number.isFinite(right) ? right : 20,0,Math.max(0,width-buttonWidth)),
-
-          bottom:clamp(Number.isFinite(bottom) ? bottom : 72,0,Math.max(0,height-buttonHeight)),
-
-        });
-
-      }
-
-      const initial = position();
-
-      place(initial.right,initial.bottom);
-
-      $btn.on('pointerdown',e => {
-
-        if (!alive() || busy || (e.button !== undefined && e.button !== 0)) return;
-
-        state.drag = {
-
-          id:e.pointerId,x:e.clientX,y:e.clientY,
-
-          right:parseFloat($btn.css('right')),bottom:parseFloat($btn.css('bottom')),moved:false,
-
-        };
-
-        try {
-
-          $btn[0].setPointerCapture(e.pointerId);
-
-        } catch (error) {}
-
+      // v2.1.2：坐标模型恢复旧版(V1.1)在移动端验证过的 left/top 锚定 + getBoundingClientRect 实测；
+      // right/bottom 在移动端布局视口/视觉视口错位时会把 fixed 球顶出可视区。仅坐标算法回退，
+      // 仍保留 const/let、箭头函数、EVENT_NS 实例命名空间、单实例 alive() 与 safe() 保护，不回退代码体系。
+      const win = targetDoc.defaultView || window;
+      const viewSize = () => ({
+        w: win.innerWidth || targetDoc.documentElement.clientWidth || 0,
+        h: win.innerHeight || targetDoc.documentElement.clientHeight || 0,
       });
-
-      $(targetDoc).on(`pointermove${EVENT_NS}`,safe('drag',e => {
-
-        const drag = state.drag;
-
-        if (!drag || e.pointerId !== drag.id) return;
-
-        const dx = e.clientX-drag.x, dy = e.clientY-drag.y;
-
-        if (!drag.moved && Math.abs(dx)+Math.abs(dy) < 6) return;
-
-        drag.moved = true;
-
-        $btn.addClass('dragging');
-
-        place(drag.right-dx,drag.bottom-dy);
-
-      }));
-
-      $(targetDoc).on(`pointerup${EVENT_NS} pointercancel${EVENT_NS}`,safe('drag',e => {
-
-        const drag = state.drag;
-
-        if (!drag || e.pointerId !== drag.id) return;
-
-        state.drag = null;
-
-        $btn.removeClass('dragging');
-
-        try {
-
-          $btn[0].releasePointerCapture(e.pointerId);
-
-        } catch (error) {}
-
-        if (drag.moved) {
-
-          try {
-
-            localStorage.setItem(KEYS.BTN_POS,fp({right:$btn.css('right'),bottom:$btn.css('bottom')}));
-
-          } catch (error) {}
-
-        } else if (e.type === 'pointerup') {
-
-          if ($panel.is(':visible')) closePanel();
-
-          else openPanel();
-
-        }
-
-      }));
-
-      // ◆v2.1.1：仅在实际挂载窗口监听 resize（旋屏引发真实布局变化时必触发）
-
-      const targetWin = targetDoc.defaultView;
-
-      if (targetWin) {
-
-        $(targetWin).on(`resize${EVENT_NS}`,safe('drag',() => {
-
-          // 视口变化时结束当前手势，避免继续使用旋屏前坐标；松手不会误触开面板
-
-          const drag = state.drag;
-
-          state.drag = null;
-
-          $btn.removeClass('dragging');
-
-          if (drag) { try { $btn[0].releasePointerCapture(drag.id); } catch (e) {} }
-
-          place(Number.parseFloat($btn.css('right')),Number.parseFloat($btn.css('bottom')));
-
-        }));
-
+      // 以左上坐标定位，并显式把 right/bottom 置 auto，避免四向同时约束 fixed 元素
+      function place(left,top) {
+        const {w,h} = viewSize();
+        if (!(w > 0 && h > 0)) return;
+        const bw = $btn.outerWidth() || 52, bh = $btn.outerHeight() || 52;
+        const L = clamp(Number.isFinite(left) ? left : 20,0,Math.max(0,w-bw));
+        const T = clamp(Number.isFinite(top) ? top : 72,0,Math.max(0,h-bh));
+        $btn.css({ left:`${L}px`, top:`${T}px`, right:'auto', bottom:'auto' });
       }
-
+      const rectPos = () => { const r = $btn[0].getBoundingClientRect(); return {left:r.left,top:r.top}; };
+      // 双格式兼容：旧版 left/top 优先；其次把 v2.x 的 right/bottom 反算为 left/top；都没有则默认右下
+      function loadInitial() {
+        let saved = {};
+        try { saved = obj(JSON.parse(localStorage.getItem(KEYS.BTN_POS) || 'null')); } catch (e) {}
+        const {w,h} = viewSize(), bw = $btn.outerWidth() || 52, bh = $btn.outerHeight() || 52;
+        const L = Number.parseFloat(saved.left), T = Number.parseFloat(saved.top);
+        if (Number.isFinite(L) && Number.isFinite(T)) { place(L,T); return; }
+        const R = Number.parseFloat(saved.right), B = Number.parseFloat(saved.bottom);
+        if (Number.isFinite(R) && Number.isFinite(B)) { place(w-bw-R,h-bh-B); return; }
+        place(w-bw-20,h-bh-72);
+      }
+      loadInitial();
+      const p0 = rectPos(); place(p0.left,p0.top); // 用实测位置立刻归一（等价旧版 clampBtn）
+      const endDrag = () => {
+        const drag = state.drag;
+        state.drag = null;
+        $btn.removeClass('dragging');
+        if (drag) { try { $btn[0].releasePointerCapture(drag.id); } catch (e) {} }
+        return drag;
+      };
+      $btn.on('pointerdown',safe('drag',e => {
+        if (!alive() || busy || state.drag) return;
+        const ev = e.originalEvent || e;
+        if (ev.isPrimary === false || (ev.button !== undefined && ev.button !== 0)) return;
+        const r = $btn[0].getBoundingClientRect();
+        state.drag = { id:ev.pointerId,x:ev.clientX,y:ev.clientY,left:r.left,top:r.top,moved:false };
+        try { $btn[0].setPointerCapture(ev.pointerId); } catch (error) {}
+        e.preventDefault();
+      }));
+      $(targetDoc).on(`pointermove${EVENT_NS}`,safe('drag',e => {
+        const drag = state.drag;
+        if (!drag) return;
+        const ev = e.originalEvent || e;
+        if (ev.pointerId !== drag.id) return;
+        const dx = ev.clientX-drag.x, dy = ev.clientY-drag.y;
+        if (!drag.moved && Math.abs(dx)+Math.abs(dy) < 6) return;
+        drag.moved = true;
+        $btn.addClass('dragging');
+        place(drag.left+dx,drag.top+dy);
+      }));
+      $(targetDoc).on(`pointerup${EVENT_NS} pointercancel${EVENT_NS}`,safe('drag',e => {
+        if (!state.drag) return;
+        const ev = e.originalEvent || e;
+        if (ev.pointerId !== state.drag.id) return;
+        const drag = endDrag();
+        if (ev.type !== 'pointerup') return; // 统一看原生事件类型，不依赖 jQuery 包装层
+        if (drag.moved) {
+          const r = $btn[0].getBoundingClientRect();
+          try { localStorage.setItem(KEYS.BTN_POS,fp({ left:`${r.left}px`, top:`${r.top}px` })); } catch (error) {}
+        } else if ($panel.is(':visible')) closePanel();
+        else openPanel();
+      }));
+      $btn.on('lostpointercapture',safe('drag',e => {
+        if (!state.drag) return;
+        if (state.drag.id === (e.originalEvent || e).pointerId) endDrag();
+      }));
+      // 旋屏/视口变化：结束当前手势（不误开面板、不写存储），按实测位置重新夹回可视区
+      $(win).on(`resize${EVENT_NS}`,safe('drag',() => {
+        endDrag();
+        const r = $btn[0].getBoundingClientRect();
+        place(r.left,r.top);
+      }));
     }
 
     // 迁移监听

@@ -1,23 +1,23 @@
-# 胎光食录 v2.1.1
+# 胎光食录 v2.1.2
 
-酒馆助手脚本的固定版本远程加载入口。index.js 完整提取自《酒馆助手脚本-胎光食录V2.1.1.json》，保留原始功能和内部版本号 2.1.1。
+酒馆助手脚本的固定版本远程加载入口。index.js 完整提取自《酒馆助手脚本-胎光食录V2.1.2-终版.json》，保留原始功能和内部版本号 2.1.2。
 
 ## 安装
 
 1. 安装并启用酒馆助手（Tavern Helper）。
-2. 从本仓库 v2.1.1 Release 下载 taiguang-shilu.v2.1.1.json。
+2. 从本仓库 v2.1.2 Release 下载 taiguang-shilu.v2.1.2.json。
 3. 在对应角色的脚本库导入并启用。先停用旧版或自动更新版，避免重复运行。
 4. 打开配套聊天，点击“食录”悬浮球。
 
 也可新建角色脚本，直接填写：
 
 ```js
-import 'https://cdn.jsdelivr.net/gh/Mpleon/taiguang-shilu@v2.1.1/index.js';
+import 'https://cdn.jsdelivr.net/gh/Mpleon/taiguang-shilu@v2.1.2/index.js';
 ```
 
 ## 固定版本与升级
 
-此入口始终加载 v2.1.1，发布新版本不会自动升级。刷新时仍需联网获取固定版本（或使用浏览器缓存）。升级时手动修改 import 中的标签，或导入新版 JSON；仅改脚本名称不会改变加载版本。
+此入口始终加载 v2.1.2，发布新版本不会自动升级。刷新时仍需联网获取固定版本（或使用浏览器缓存）。升级时手动修改 import 中的标签，或导入新版 JSON；仅改脚本名称不会改变加载版本。
 
 此前已导入的 @latest 入口不会自动变成固定版本。请将旧入口改为上面的地址，或停用旧入口并导入本版本。旧 Release 保留历史文件。
 
@@ -25,14 +25,14 @@ import 'https://cdn.jsdelivr.net/gh/Mpleon/taiguang-shilu@v2.1.1/index.js';
 
 1. 将新版原始 JSON 的 content 提取为 index.js。
 2. 同步更新导入 JSON 的文件名、名称、说明、import 固定版本号及 README。
-3. 提交并推送，对该提交创建新版本标签，例如 v2.1.2，发布 Release 并附上新版导入 JSON。
+3. 提交并推送，对该提交创建新版本标签，例如 v2.1.3，发布 Release 并附上新版导入 JSON。
 
 不要移动已发布标签。index.js 必须存在于该标签的仓库文件中，仅上传到 Release 附件不够。
 
 ## 文件与数据
 
-- index.js：原始 V2.1.1 功能代码。
-- taiguang-shilu.v2.1.1.json：固定版本入口，保留新版原始文件的脚本 ID、按钮及数据配置。
+- index.js：原始 V2.1.2 功能代码。
+- taiguang-shilu.v2.1.2.json：固定版本入口，保留新版原始文件的脚本 ID、按钮及数据配置。
 
 脚本需要配套聊天变量，本仓库不包含角色卡、世界书或变量初始化脚本。import 只加载并执行 JavaScript，不会自动读取仓库 JSON 或升级聊天数据。编辑和快照恢复会写入聊天变量。
 

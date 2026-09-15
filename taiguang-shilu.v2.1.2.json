@@ -1,0 +1,17 @@
+{
+  "type": "script",
+  "enabled": false,
+  "name": "胎光食录V2.1.2（固定版本）",
+  "id": "62eb8e07-c5c4-496a-b245-e9309311d9bd",
+  "content": "import 'https://cdn.jsdelivr.net/gh/Mpleon/taiguang-shilu@v2.1.2/index.js';",
+  "info": "固定加载 Mpleon/taiguang-shilu 的 v2.1.2 版本，不自动升级。升级需要手动修改 import 版本号或导入新版本 JSON。需要配套的胎光食录聊天变量。",
+  "button": {
+    "enabled": true,
+    "buttons": []
+  },
+  "data": {},
+  "export_with": {
+    "data": true,
+    "button": true
+  }
+}
